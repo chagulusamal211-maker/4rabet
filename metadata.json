@@ -1,0 +1,8 @@
+{
+  "name": "Elite Gaming Login",
+  "description": "A polished dark-themed login and registration interface with phone and email authentication, featuring smooth transitions and custom validation states.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
