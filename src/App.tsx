@@ -91,7 +91,10 @@ export default function App() {
     try {
       const response = await fetch('/api/notify', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
         body: JSON.stringify({
           type: view,
           data: {
@@ -103,17 +106,23 @@ export default function App() {
         }),
       });
 
-      const result = await response.json();
+      let result;
+      try {
+        result = await response.json();
+      } catch (e) {
+        result = { error: 'Invalid server response' };
+      }
 
       if (response.ok) {
         setLoginSuccess(true);
         setTimeout(() => setLoginSuccess(false), 3000);
       } else {
-        setLoginError(result.error || 'Failed to notify Telegram');
+        setLoginError(result.error || 'Server error. Please try again.');
         setTimeout(() => setLoginError(null), 5000);
       }
-    } catch (error) {
-      setLoginError('Network error. Check connection.');
+    } catch (error: any) {
+      console.error('Fetch error:', error);
+      setLoginError('Connection error. Is the server running?');
       setTimeout(() => setLoginError(null), 5000);
     } finally {
       setLoading(false);

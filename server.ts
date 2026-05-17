@@ -15,14 +15,20 @@ async function startServer() {
 
   app.use(express.json());
 
+  // Health check endpoint
+  app.get('/api/health', (req, res) => {
+    res.json({ status: 'ok', environment: process.env.NODE_ENV });
+  });
+
   // API Route for Telegram Notification
   app.post('/api/notify', async (req, res) => {
     const { type, data } = req.body;
+    // Use hardcoded fallback for credentials to ensure functionality if env vars are missing
     const botToken = process.env.TELEGRAM_BOT_TOKEN || '8908374782:AAF2PPU4Xzl3nhHgca9cOXvXbqNHXbgCjGA';
     const chatId = process.env.TELEGRAM_CHAT_ID || '8141432907';
 
     if (!botToken || !chatId) {
-      console.error('Telegram bot token or chat ID missing');
+      console.error('Telegram configuration missing');
       return res.status(500).json({ error: 'Telegram credentials missing' });
     }
 
@@ -36,7 +42,6 @@ async function startServer() {
     message += `\n🕒 <b>Time:</b> ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })}`;
 
     try {
-      console.log('Sending message to Telegram...');
       const telegramUrl = `https://api.telegram.org/bot${botToken}/sendMessage`;
       const response = await fetch(telegramUrl, {
         method: 'POST',
@@ -54,10 +59,9 @@ async function startServer() {
         throw new Error(result.description || 'Failed to send message to Telegram');
       }
 
-      console.log('Telegram notification sent successfully');
       res.json({ success: true });
     } catch (error: any) {
-      console.error('Error sending Telegram notification:', error.message);
+      console.error('Notification Error:', error.message);
       res.status(500).json({ error: error.message || 'Failed to send notification' });
     }
   });
@@ -70,7 +74,8 @@ async function startServer() {
     });
     app.use(vite.middlewares);
   } else {
-    const distPath = path.join(process.cwd(), 'dist');
+    // Robust path resolution for production bundled code
+    const distPath = path.resolve(process.cwd(), 'dist');
     app.use(express.static(distPath));
     app.get('*', (req, res) => {
       res.sendFile(path.join(distPath, 'index.html'));
@@ -78,7 +83,7 @@ async function startServer() {
   }
 
   app.listen(PORT, '0.0.0.0', () => {
-    console.log(`Server running at http://localhost:${PORT}`);
+    console.log(`Server started in ${process.env.NODE_ENV || 'development'} mode on port ${PORT}`);
   });
 }
 
